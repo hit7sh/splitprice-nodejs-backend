@@ -18,6 +18,7 @@ const create_person_1 = require("./utils/create-person");
 const person_schema_1 = __importDefault(require("./types/person-schema"));
 const transaction_schema_1 = __importDefault(require("./types/transaction-schema"));
 const add_transaction_1 = require("./utils/add-transaction");
+const get_transactions_1 = __importDefault(require("./utils/get-transactions"));
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.json());
 app.post('/add-user', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -43,6 +44,19 @@ app.post('/add-transaction', (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.json({ 'message': 'Transaction added successfully' });
     }
     catch (_b) {
+        res.json({ message: 'Server Error' });
+    }
+}));
+app.get('/get-transaction', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let id = parseInt(req.query.id + "");
+        if (!id) {
+            res.status(404).json({ message: "Query param {id} not found in url route" });
+        }
+        let ans = yield (0, get_transactions_1.default)(id);
+        res.send({ transactions: ans });
+    }
+    catch (_c) {
         res.json({ message: 'Server Error' });
     }
 }));

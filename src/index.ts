@@ -2,8 +2,9 @@ import express from 'express';
 import bodyParser from 'body-parser'
 import { createPerson } from "./utils/create-person";
 import personSchema from './types/person-schema';
-import transactionSchema from './types/transaction-schema';
+import transactionSchema, { transactionType } from './types/transaction-schema';
 import { addTransaction } from './utils/add-transaction';
+import getTransaction from './utils/get-transactions';
 
 const app = express();
 app.use(bodyParser.json());
@@ -31,6 +32,20 @@ app.post('/add-transaction', async (req, res) => {
         }
         await addTransaction(transaction);
         res.json({'message' : 'Transaction added successfully'});
+    } catch {
+        res.json({message:'Server Error'});
+    }
+});
+
+app.get('/get-transaction', async (req, res) => {
+    try {
+        let id = parseInt(req.query.id+"");
+        if (!id) {
+            res.status(404).json({message:"Query param {id} not found in url route"});
+        }
+        
+        let ans = await getTransaction(id);
+        res.send({transactions: ans});
     } catch {
         res.json({message:'Server Error'});
     }

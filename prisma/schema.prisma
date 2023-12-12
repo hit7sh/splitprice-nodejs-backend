@@ -13,6 +13,7 @@ datasource db {
 model Person {
   id           Int           @id @default(autoincrement())
   username     String        @unique
+  amount       Int           @default(0)
   transactions Transaction[]
 }
 
