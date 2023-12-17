@@ -122,7 +122,7 @@ app.post('/login', async (req, res) => {
         else if (user?.hashedPassword === hashedPassword) {
             const token = jwt.sign({ username, hashedPassword }, SECRET, { expiresIn: '7d' });
             
-            res.json({ message: 'User signed up successfully', token });
+            res.json({ message: 'User Logged in successfully', token });
         } else res.status(404).json({error:'User does not exist'});
     } catch {
         res.status(500).json({message: 'Server Error {login}'});
