@@ -9,23 +9,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addTransaction = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-function addTransaction(transaction) {
+function getUser(username) {
     return __awaiter(this, void 0, void 0, function* () {
-        const personId = transaction.personId;
-        const fromPersonId = transaction.fromPersonId;
-        const amount = transaction.amount;
-        yield prisma.transaction.create({
-            data: transaction
+        let result = yield prisma.user.findUnique({
+            where: {
+                username
+            }
         });
-        transaction.personId = fromPersonId;
-        transaction.fromPersonId = personId;
-        transaction.amount = -amount;
-        yield prisma.transaction.create({
-            data: transaction
-        });
+        if (result) {
+            return result;
+        }
+        else {
+            return null;
+        }
     });
 }
-exports.addTransaction = addTransaction;
+exports.default = getUser;

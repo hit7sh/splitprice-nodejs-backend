@@ -2,17 +2,14 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient();
 
-export default async function getTransaction(id:number) {
+export default async function getPerson(username:string) {
     let result = await prisma.person.findUnique({
         where: {
-            id: id
-        },
-        include: {
-            transactions:true
+            username
         }
     });
     if (result) {
-        return result.transactions;
+        return result;
     } else {
         return null;
     }
