@@ -9,42 +9,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPersonByUsername = void 0;
+exports.addFriend = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-function getPerson(id) {
+function addFriend(person1Id, person2Id) {
     return __awaiter(this, void 0, void 0, function* () {
-        let result = yield prisma.person.findUnique({
-            where: {
-                id
-            },
-            include: {
-                friends: true,
-                transactions: true
+        yield prisma.friend.create({
+            data: {
+                personId: person1Id,
+                friendId: person2Id
             }
         });
-        if (result) {
-            return result;
-        }
-        else {
-            return null;
-        }
-    });
-}
-exports.default = getPerson;
-function getPersonByUsername(username) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let result = yield prisma.person.findUnique({
-            where: {
-                username
+        yield prisma.friend.create({
+            data: {
+                personId: person2Id,
+                friendId: person1Id
             }
         });
-        if (result) {
-            return result;
-        }
-        else {
-            return null;
-        }
     });
 }
-exports.getPersonByUsername = getPersonByUsername;
+exports.addFriend = addFriend;

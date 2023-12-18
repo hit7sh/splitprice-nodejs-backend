@@ -12,8 +12,9 @@ import { createUser } from './utils/create-user';
 import  jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { assert } from 'console';
-import getPerson from './utils/get-person';
+import getPerson, { getPersonByUsername } from './utils/get-person';
 import { deleteTransactions } from './utils/delete-transactions';
+import { addFriend } from './utils/add-friend';
 dotenv.config()
 
 const SECRET = process.env.SECRET;
@@ -23,18 +24,19 @@ const app = express();
 app.use(express.json());
 
 
-// app.post('/add-user', authenticateJwt, async (req, res) => {
-//     try {
-//         const person = req.body;
-//         if (!personSchema.safeParse(person).success) {
-//             res.json({message:"invalid input json"});
-//         }
-//         await createPerson(person.username);
-//         res.json({'message' : 'person added successfully'});
-//     } catch {
-//         res.json({message:'Server Error {add-user}'});
-//     }
-// });
+app.post('/add-friend', authenticateJwt, async (req, res) => {
+    try {
+        const {person1Id, person2Id} = req.body;
+        if (!person1Id || !person2Id) {
+            res.json({message:"Ids not available"});
+            return;
+        }
+        await addFriend(person1Id, person2Id);
+        res.json({'message' : 'added in your friends List!🤝'});
+    } catch {
+        res.json({message:'Server Error {add-friend}'});
+    }
+});
 
 app.post('/add-transaction', authenticateJwt, async (req, res) => {
     try {
@@ -67,9 +69,9 @@ app.get('/get-transaction', authenticateJwt, async (req, res) => {
 app.delete('/delete-transactions', authenticateJwt, async (req, res) => {
     try {
         const {username, fromUsername} = await req.body;
-        let person = await getPerson(username);
+        let person = await getPersonByUsername(username);
         let personId = person?.id
-        let other = await getPerson(fromUsername)
+        let other = await getPersonByUsername(fromUsername)
         let otherId = other?.id;
         if (typeof personId == 'undefined' || typeof otherId == 'undefined') {
             res.status(500).json({message: 'ids not found'})
@@ -95,6 +97,16 @@ app.get('/get-user-salt', async (req, res) => {
     } catch {
         res.json({message: 'Server Error {get user salt}'});
     }
+});
+
+app.get('/get-person', authenticateJwt, async (req, res) => {
+    const {id} = req.body;
+    if (!id) {
+        res.status(404).send({message:'Please send the id'});
+        return;
+    }
+    const person = await getPerson(id);
+    res.json({person});
 });
 
 app.post('/signup', async (req, res) => {

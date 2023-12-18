@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -23,25 +46,28 @@ const create_user_1 = require("./utils/create-user");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const console_1 = require("console");
-const get_person_1 = __importDefault(require("./utils/get-person"));
+const get_person_1 = __importStar(require("./utils/get-person"));
 const delete_transactions_1 = require("./utils/delete-transactions");
+const add_friend_1 = require("./utils/add-friend");
 dotenv_1.default.config();
 const SECRET = process.env.SECRET;
 (0, console_1.assert)(typeof SECRET === 'string');
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
-// app.post('/add-user', authenticateJwt, async (req, res) => {
-//     try {
-//         const person = req.body;
-//         if (!personSchema.safeParse(person).success) {
-//             res.json({message:"invalid input json"});
-//         }
-//         await createPerson(person.username);
-//         res.json({'message' : 'person added successfully'});
-//     } catch {
-//         res.json({message:'Server Error {add-user}'});
-//     }
-// });
+app.post('/add-friend', authenticateJwt, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { person1Id, person2Id } = req.body;
+        if (!person1Id || !person2Id) {
+            res.json({ message: "Ids not available" });
+            return;
+        }
+        yield (0, add_friend_1.addFriend)(person1Id, person2Id);
+        res.json({ 'message': 'added in your friends List!🤝' });
+    }
+    catch (_a) {
+        res.json({ message: 'Server Error {add-friend}' });
+    }
+}));
 app.post('/add-transaction', authenticateJwt, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transaction = yield req.body;
@@ -51,7 +77,7 @@ app.post('/add-transaction', authenticateJwt, (req, res) => __awaiter(void 0, vo
         yield (0, add_transaction_1.addTransaction)(transaction);
         res.json({ 'message': 'Transaction added successfully' });
     }
-    catch (_a) {
+    catch (_b) {
         res.json({ message: 'Server Error {add-transactions}' });
     }
 }));
@@ -64,16 +90,16 @@ app.get('/get-transaction', authenticateJwt, (req, res) => __awaiter(void 0, voi
         let ans = yield (0, get_transactions_1.default)(id);
         res.send({ transactions: ans });
     }
-    catch (_b) {
+    catch (_c) {
         res.json({ message: 'Server Error {get-transactions}' });
     }
 }));
 app.delete('/delete-transactions', authenticateJwt, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, fromUsername } = yield req.body;
-        let person = yield (0, get_person_1.default)(username);
+        let person = yield (0, get_person_1.getPersonByUsername)(username);
         let personId = person === null || person === void 0 ? void 0 : person.id;
-        let other = yield (0, get_person_1.default)(fromUsername);
+        let other = yield (0, get_person_1.getPersonByUsername)(fromUsername);
         let otherId = other === null || other === void 0 ? void 0 : other.id;
         if (typeof personId == 'undefined' || typeof otherId == 'undefined') {
             res.status(500).json({ message: 'ids not found' });
@@ -83,7 +109,7 @@ app.delete('/delete-transactions', authenticateJwt, (req, res) => __awaiter(void
             res.json({ message: 'delete Successful' });
         }
     }
-    catch (_c) {
+    catch (_d) {
         res.status(500).json({ message: 'Server Error!' });
     }
 }));
@@ -98,9 +124,18 @@ app.get('/get-user-salt', (req, res) => __awaiter(void 0, void 0, void 0, functi
             res.json({ salt });
         }
     }
-    catch (_d) {
+    catch (_e) {
         res.json({ message: 'Server Error {get user salt}' });
     }
+}));
+app.get('/get-person', authenticateJwt, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.body;
+    if (!id) {
+        res.status(404).send({ message: 'Please send the id' });
+        return;
+    }
+    const person = yield (0, get_person_1.default)(id);
+    res.json({ person });
 }));
 app.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -115,7 +150,7 @@ app.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             token = yield jsonwebtoken_1.default.sign({ username, hashedPassword }, SECRET);
         res.json({ message: 'User signed up successfully', token });
     }
-    catch (_e) {
+    catch (_f) {
         res.status(500).json({ message: 'Server Error {signup}' });
     }
 }));
@@ -127,12 +162,12 @@ app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             res.status(500).json({ message: 'SECRET Not available' });
         else if ((user === null || user === void 0 ? void 0 : user.hashedPassword) === hashedPassword) {
             const token = jsonwebtoken_1.default.sign({ username, hashedPassword }, SECRET, { expiresIn: '7d' });
-            res.json({ message: 'User signed up successfully', token });
+            res.json({ message: 'User Logged in successfully', token });
         }
         else
             res.status(404).json({ error: 'User does not exist' });
     }
-    catch (_f) {
+    catch (_g) {
         res.status(500).json({ message: 'Server Error {login}' });
     }
 }));

@@ -21,6 +21,14 @@ model Person {
   username     String        @unique
   amount       Int           @default(0)
   transactions Transaction[]
+  friends      Friend[]
+}
+
+model Friend {
+  id       Int    @id @default(autoincrement())
+  personId Int
+  friendId Int
+  author   Person @relation(fields: [personId], references: [id])
 }
 
 model Transaction {
